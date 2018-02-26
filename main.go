@@ -40,6 +40,7 @@ func CopyFile(src string, dest string) (int64, error) {
 	return io.Copy(destFile, srcFile)
 }
 
+
 func setGOROOTEnv(gopath string){
 	cmd := exec.Command("setx", "GOPATH", gopath)
 	stdout, err := cmd.StdoutPipe()
@@ -77,6 +78,68 @@ func main() {
 			CopyFile(thisFile, path.Join(goroot,"bin", thisFileName))
 			return 
 		}
+
+		if len(os.Args) == 2 && os.Args[1] == "defaulttool" {
+			log.Printf("start install default tool")
+			arr := []string {
+				"github.com/nsf/gocode",
+				"github.com/tpng/gopkgs",
+				"github.com/fatih/gomodifytags",
+				"github.com/haya14busa/goplay",
+				"github.com/rogpeppe/gode",
+				"github.com/derekparker/delve/cmd/dlv"}
+			
+			for _,item := range arr {
+				log.Println("go get " + item)
+				cmd := exec.Command("go","get",item)
+				stdout, err := cmd.StdoutPipe()
+				if err != nil {
+					log.Fatal(err)
+				}
+				defer stdout.Close()
+				if err := cmd.Start(); err != nil {
+					log.Fatal(err)
+				}
+				cmd.Wait()
+			}
+			// clone tool git clone https://github.com/golang/tools.git src/github.com/golang/tools
+			cmd := exec.Command("git","clone","https://github.com/golang/tools.git","src/github.com/golang/tools")
+			stdout, err := cmd.StdoutPipe()
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer stdout.Close()
+			if err := cmd.Start(); err != nil {
+				log.Fatal(err)
+			}
+			cmd.Wait()
+
+			
+			// 安装那些在墙内安装不了的
+			arr = []string{"github.com/ramya-rao-a/go-outline",
+				"github.com/acroca/go-symbols",
+				"golang.org/x/tools/cmd/guru",
+				"golang.org/x/tools/cmd/gorename",
+				"github.com/josharian/impl",
+				"github.com/rogpeppe/godef",
+				"github.com/sqs/goreturns",
+				"github.com/golang/lint/golint",
+				"github.com/cweill/gotests/gotests"}
+			for _,item := range arr {
+				log.Println("go install " + item)
+				cmd := exec.Command("go","install",item)
+				stdout, err := cmd.StdoutPipe()
+				if err != nil {
+					log.Fatal(err)
+				}
+				defer stdout.Close()
+				if err := cmd.Start(); err != nil {
+					log.Fatal(err)
+				}
+				cmd.Wait()
+			}	
+		}
+
 		if len(os.Args) == 3 {
 			if os.Args[1] == "get" {
 				pwd,_ := os.Getwd()
